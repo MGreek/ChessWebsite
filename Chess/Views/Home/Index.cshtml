@@ -1,0 +1,92 @@
+﻿@{
+    ViewBag.Title = "Chess";
+}
+
+<head>
+    <style>
+        body {
+            background-color: gray;
+        }
+
+         .chessboard {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+        }
+
+         .chessboard-row {
+            display: flex;
+            flex-direction: row;
+        }
+
+         .chessboard-square {
+            width: 4vw;
+            height: 4vw;
+            border: none;
+        }
+
+         .chessboard-square-0 {
+            background-color: black;
+            color: white;
+        }
+
+         .chessboard-square-1 {
+            background-color: white;
+            color: black;
+        }
+
+         .chessboard-square-selected {
+             border: solid gold 4px;
+         }
+    </style>
+</head>
+
+@{
+    Chess.Services.MatchState matchState = ViewBag.Chessboard.GetMatchState();
+    string strMatchState = string.Empty;
+    switch (matchState)
+    {
+        case Chess.Services.MatchState.Stalemate:
+            strMatchState = "Stalemate";
+            break;
+        case Chess.Services.MatchState.BlackWin:
+            strMatchState = "Black wins";
+            break;
+        case Chess.Services.MatchState.WhiteWin:
+            strMatchState = "White wins";
+            break;
+        default:
+            break;
+    }
+}
+<h1>@strMatchState</h1>
+
+@using (Html.BeginForm("TileClick", "Home"))
+{
+<div class="chessboard">
+    @for (int row = 0; row < 8; ++row)
+    {
+    <div class="chessboard-row">
+        @for (int column = 0; column < 8; ++column)
+        {
+            string displayString = ViewBag.Chessboard.GetPieceString(row, column);
+            string strCoordinates = row.ToString() + ';' + column.ToString();
+            string selectedClass = ((ViewBag.SelectedCoordinates != null) && (ViewBag.SelectedCoordinates.Contains(new Chess.Models.Coordinates() { X = row, Y = column }))) ? " chessboard-square-selected" : ""; 
+            if ((row + column) % 2 == 1)
+            {
+                string classString = "chessboard-square chessboard-square-0" + selectedClass;
+                <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>@displayString</button>
+            }
+            else
+            {
+                string classString = "chessboard-square chessboard-square-1" + selectedClass;
+                <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>@displayString</button>
+            }
+        }
+    </div>
+    }
+</div>
+}
