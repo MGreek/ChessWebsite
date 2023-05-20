@@ -41,6 +41,11 @@
          .chessboard-square-selected {
              border: solid gold 4px;
          }
+         .chessboard-square-image {
+             width: 100%;
+             height: 100%;
+             object-fit: contain;
+         }
     </style>
 </head>
 
@@ -72,18 +77,28 @@
     <div class="chessboard-row">
         @for (int column = 0; column < 8; ++column)
         {
-            string displayString = ViewBag.Chessboard.GetPieceString(row, column);
+            string strImgPath = ViewBag.Chessboard.GetPieceImgPath(row, column);
             string strCoordinates = row.ToString() + ';' + column.ToString();
             string selectedClass = ((ViewBag.SelectedCoordinates != null) && (ViewBag.SelectedCoordinates.Contains(new Chess.Models.Coordinates() { X = row, Y = column }))) ? " chessboard-square-selected" : ""; 
             if ((row + column) % 2 == 1)
             {
                 string classString = "chessboard-square chessboard-square-0" + selectedClass;
-                <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>@displayString</button>
+                <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>
+                        @if (strImgPath != string.Empty)
+                        {
+                            <img src="@strImgPath" class="chessboard-square-image">
+                        }
+                </button>
             }
             else
             {
                 string classString = "chessboard-square chessboard-square-1" + selectedClass;
-                <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>@displayString</button>
+                <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>
+                        @if (strImgPath != string.Empty)
+                        {
+                            <img src="@strImgPath" class="chessboard-square-image">
+                        }
+                </button>
             }
         }
     </div>

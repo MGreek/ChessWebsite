@@ -7,7 +7,8 @@ namespace Chess.Controllers
 {
     public class HomeController : Controller
     {
-        static ChessboardService ChessboardService { get; } = new ChessboardService(new ChessboardModel());
+        static ChessboardService ChessboardService { get; } = 
+            new ChessboardService(new ChessboardModel(), PlayerColor.White, PromotionPieceType.Queen);
         static List<Coordinates> SelectedCoordinates { get; } = new List<Coordinates>();
         public ActionResult Index()
         {

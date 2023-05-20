@@ -17,14 +17,14 @@ namespace Chess.Services
         public PlayerColor CurrentPlayer { get; private set; }
         public PromotionPieceType CurrentPromotion { get; set; }
 
-        public ChessboardService(ChessboardModel chessboard)
+        public ChessboardService(ChessboardModel chessboard, PlayerColor currentPlayer, PromotionPieceType currentPromotion)
         {
             Chessboard = chessboard;
-            CurrentPlayer = PlayerColor.White;
-            CurrentPromotion = PromotionPieceType.Queen;
-        }
+            CurrentPlayer = currentPlayer;
+            CurrentPromotion = currentPromotion;
+        } 
 
-        public string GetPieceString(int rank, int file)
+        public string GetPieceImgPath(int rank, int file)
         {
             Piece piece = GetPieceFromPosition(new Coordinates() { X = rank, Y = file }, GetCurrentPosition());
             if (piece == null)
@@ -33,26 +33,27 @@ namespace Chess.Services
             switch (piece.Type)
             {
                 case PieceType.King:
-                    return piece.Color == PlayerColor.White ? "♔" : "♚";
+                    return piece.Color == PlayerColor.White ? "/src/img/WhiteKing.png" : "/src/img/BlackKing.png";
                 case PieceType.Queen:
-                    return piece.Color == PlayerColor.White ? "♕" : "♛";
+                    return piece.Color == PlayerColor.White ? "/src/img/WhiteQueen.png" : "/src/img/BlackQueen.png";
                 case PieceType.Rook:
-                    return piece.Color == PlayerColor.White ? "♖" : "♜";
+                    return piece.Color == PlayerColor.White ? "/src/img/WhiteRook.png" : "/src/img/BlackRook.png";
                 case PieceType.Bishop:
-                    return piece.Color == PlayerColor.White ? "♗" : "♝";
+                    return piece.Color == PlayerColor.White ? "/src/img/WhiteBishop.png" : "/src/img/BlackBishop.png";
                 case PieceType.Knight:
-                    return piece.Color == PlayerColor.White ? "♘" : "♞";
+                    return piece.Color == PlayerColor.White ? "/src/img/WhiteKnight.png" : "/src/img/BlackKnight.png";
                 case PieceType.Pawn:
-                    return piece.Color == PlayerColor.White ? "♙" : "♟";
+                    return piece.Color == PlayerColor.White ? "/src/img/WhitePawn.png" : "/src/img/BlackPawn.png";
                 default:
                     throw new ArgumentException("Invalid piece type.");
             }
         }
 
         public Piece GetPiece(Coordinates coordinates)
-        {
-            return GetPieceFromPosition(coordinates, GetCurrentPosition());
-        }
+        { return GetPieceFromPosition(coordinates, GetCurrentPosition()); }
+
+        public List<Move> GetHistory()
+        { return new List<Move>(Chessboard.History); }
 
         public Piece[,] GetCurrentPosition()
         {
@@ -72,11 +73,6 @@ namespace Chess.Services
             foreach (Move move in Chessboard.History)
             { Move(move, currentPosition); }
             return currentPosition;
-        }
-        
-        public List<Move> GetHistory()
-        {
-            return new List<Move>(Chessboard.History);
         }
         
         public List<Coordinates> GetMoves(Coordinates coordinates)

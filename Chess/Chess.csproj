@@ -167,6 +167,18 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="src\img\BlackBishop.png" />
+    <Content Include="src\img\BlackKing.png" />
+    <Content Include="src\img\BlackKnight.png" />
+    <Content Include="src\img\BlackPawn.png" />
+    <Content Include="src\img\BlackQueen.png" />
+    <Content Include="src\img\BlackRook.png" />
+    <Content Include="src\img\WhiteBishop.png" />
+    <Content Include="src\img\WhiteKing.png" />
+    <Content Include="src\img\WhiteKnight.png" />
+    <Content Include="src\img\WhitePawn.png" />
+    <Content Include="src\img\WhiteQueen.png" />
+    <Content Include="src\img\WhiteRook.png" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

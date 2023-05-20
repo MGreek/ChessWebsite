@@ -1,6 +1,5 @@
 ﻿using Chess.Models;
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,6 +17,23 @@ namespace Chess.Services
             if (!CheckCoordinates(coordinates))
                 return null;
             return position[coordinates.X, coordinates.Y];
+        }
+
+        static PieceType GetPieceTypeFromPromotionPieceType(PromotionPieceType currentPromotion)
+        {
+            switch (currentPromotion)
+            {
+                case PromotionPieceType.Queen:
+                    return PieceType.Queen;
+                case PromotionPieceType.Rook:
+                    return PieceType.Rook;
+                case PromotionPieceType.Bishop:
+                    return PieceType.Bishop;
+                case PromotionPieceType.Knight:
+                    return PieceType.Knight;
+                default:
+                    throw new InvalidOperationException();
+            }
         }
 
         void PlainMove(Move move, Piece[,] position)
@@ -64,23 +80,6 @@ namespace Chess.Services
             }
             PlainMove(move, currentPosition);
             return move;
-        }
-
-        PieceType GetPieceTypeFromPromotionPieceType(PromotionPieceType currentPromotion)
-        {
-            switch (currentPromotion)
-            {
-                case PromotionPieceType.Queen:
-                    return PieceType.Queen;
-                case PromotionPieceType.Rook:
-                    return PieceType.Rook;
-                case PromotionPieceType.Bishop:
-                    return PieceType.Bishop;
-                case PromotionPieceType.Knight:
-                    return PieceType.Knight;
-                default:
-                    throw new InvalidOperationException();
-            }
         }
 
         List<Coordinates> GetAttackers(Coordinates coordinates, PlayerColor attackerColor)
@@ -384,7 +383,9 @@ namespace Chess.Services
                 initialRookLongCastlePosition = new Coordinates() { X = 7, Y = 0 };
             }
 
-            bool canShortCastle = !Chessboard.History.Any(delegate (Move move) 
+            bool isKingUnderAttack = GetAttackers(coordinates, oppositeColor).Count > 0;
+
+            bool canShortCastle = !isKingUnderAttack && !Chessboard.History.Any(delegate (Move move) 
             { return initialPosition == move.Source || initialRookShortCastlePosition == move.Source; });
             if (canShortCastle)
             {
@@ -394,13 +395,13 @@ namespace Chess.Services
                     GetPieceFromPosition(new Coordinates() { X = coordinates.X, Y = coordinates.Y + 2 }, currentPosition) == null;
                 canShortCastle = shortCastlePathEmpty && GetAttackers(new Coordinates() { X = coordinates.X, Y = coordinates.Y + 1 }, oppositeColor).Count == 0;
                 if ((shortCastleRook == null) || (shortCastleRook.Type != PieceType.Rook) || (shortCastleRook.Color != piece.Color))
-                { canShortCastle = false;}
+                { canShortCastle = false; }
             }
 
             if (canShortCastle)
             { result.Add(new Coordinates() { X = coordinates.X, Y = coordinates.Y + 2 }); }
             
-            bool canLongCastle = !Chessboard.History.Any(delegate (Move move) 
+            bool canLongCastle = !isKingUnderAttack && !Chessboard.History.Any(delegate (Move move) 
             { return initialPosition == move.Source || initialRookLongCastlePosition == move.Source; });
             if (canLongCastle)
             {
@@ -466,7 +467,7 @@ namespace Chess.Services
 
         bool CheckHangingKingMove(Move move)
         {
-            ChessboardService sandbox = new ChessboardService(new ChessboardModel() { History = new List<Move>(Chessboard.History) });
+            ChessboardService sandbox = new ChessboardService(new ChessboardModel() { History = new List<Move>(Chessboard.History) }, CurrentPlayer, CurrentPromotion);
             sandbox.Chessboard.History.Add(move);
             sandbox.CurrentPlayer = (CurrentPlayer == PlayerColor.White) ? PlayerColor.Black : PlayerColor.White;
             return sandbox.CheckKingHanging();
