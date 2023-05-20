@@ -8,7 +8,7 @@
             background-color: gray;
         }
 
-         .chessboard {
+        .chessboard {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -17,35 +17,93 @@
             flex-direction: column;
         }
 
-         .chessboard-row {
+        .chessboard-row {
             display: flex;
             flex-direction: row;
         }
 
-         .chessboard-square {
+        .chessboard-square {
             width: 4vw;
             height: 4vw;
             border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-         .chessboard-square-0 {
+        .chessboard-square-0 {
             background-color: black;
             color: white;
         }
 
-         .chessboard-square-1 {
+        .chessboard-square-1 {
             background-color: white;
             color: black;
         }
 
-         .chessboard-square-selected {
-             border: solid gold 4px;
-         }
-         .chessboard-square-image {
-             width: 100%;
-             height: 100%;
-             object-fit: contain;
-         }
+        .chessboard-square-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .chessboard-square-selected {
+            opacity: 0.5;
+        }
+
+        .control-panel {
+            position: absolute;
+            left: 20%;
+            top: 10%;
+            font-family: "Montserrat", sans-serif;
+            font-size: 20pt;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .promotion-panel {
+            margin-top: 4px;
+            border: solid black 1px;
+            font-size: 12pt;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .button-promotion-panel {
+            background-color: white;
+            width: 4vw;
+            height: 4vw;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .button-promotion-panel-selected {
+            background-color: gold;
+        }
+
+        .button-promotion-panel-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .button-reset {
+            width: 4vw;
+            height: 4vw;
+            font-size: 12pt;
+        }
+
+        .button-undo-last-move {
+            width: 4vw;
+            height: 4vw;
+            font-size: 12pt;
+        }
     </style>
 </head>
 
@@ -55,19 +113,60 @@
     switch (matchState)
     {
         case Chess.Services.MatchState.Stalemate:
-            strMatchState = "Stalemate";
+            strMatchState = "stalemate";
             break;
         case Chess.Services.MatchState.BlackWin:
-            strMatchState = "Black wins";
+            strMatchState = "black won";
             break;
         case Chess.Services.MatchState.WhiteWin:
-            strMatchState = "White wins";
+            strMatchState = "white won";
             break;
         default:
+            strMatchState = (ViewBag.Chessboard.CurrentPlayer == Chess.Models.PlayerColor.White) ? "white to move" : "black to move";
             break;
     }
 }
-<h1>@strMatchState</h1>
+<div class="control-panel">
+    <p>state: @strMatchState</p>
+    @using (Html.BeginForm("UndoLastMove", "Home"))
+    {
+    <button type="submit" class="button-undo-last-move">Undo</button>
+    }
+    @using (Html.BeginForm("ResetClick", "Home"))
+    {
+    <button type="submit" class="button-reset">Reset</button>
+    }
+    @using (Html.BeginForm("PromotionPieceChanged", "Home"))
+    {
+        string classString = "button-promotion-panel";
+        string classStringQueen = classString;
+        string classStringRook = classString;
+        string classStringBishop = classString;
+        string classStringKnight = classString;
+        if (ViewBag.Chessboard.CurrentPromotion == Chess.Models.PromotionPieceType.Queen)
+        { classStringQueen += " button-promotion-panel-selected"; }
+        if (ViewBag.Chessboard.CurrentPromotion == Chess.Models.PromotionPieceType.Rook)
+        { classStringRook += " button-promotion-panel-selected"; }
+        if (ViewBag.Chessboard.CurrentPromotion == Chess.Models.PromotionPieceType.Bishop)
+        { classStringBishop += " button-promotion-panel-selected"; }
+        if (ViewBag.Chessboard.CurrentPromotion == Chess.Models.PromotionPieceType.Knight)
+        { classStringKnight += " button-promotion-panel-selected"; }
+    <div class="promotion-panel">
+        <button class="@classStringQueen" type="submit" value="queen" name="promotion">
+            <img src="~/src/img/WhiteQueen.png" class="button-promotion-panel-image">
+        </button>
+        <button class="@classStringRook" type="submit" value="rook" name="promotion">
+            <img src="~/src/img/WhiteRook.png" class="button-promotion-panel-image">
+        </button>
+        <button class="@classStringBishop" type="submit" value="bishop" name="promotion">
+            <img src="~/src/img/WhiteBishop.png" class="button-promotion-panel-image">
+        </button>
+        <button class="@classStringKnight" type="submit" value="knight" name="promotion">
+            <img src="~/src/img/WhiteKnight.png" class="button-promotion-panel-image">
+        </button>
+    </div>
+    }
+</div>
 
 @using (Html.BeginForm("TileClick", "Home"))
 {
@@ -77,12 +176,16 @@
     <div class="chessboard-row">
         @for (int column = 0; column < 8; ++column)
         {
+            Chess.Models.Piece piece = ViewBag.Chessboard.GetPiece(new Chess.Models.Coordinates() { X = row, Y = column });
             string strImgPath = ViewBag.Chessboard.GetPieceImgPath(row, column);
             string strCoordinates = row.ToString() + ';' + column.ToString();
-            string selectedClass = ((ViewBag.SelectedCoordinates != null) && (ViewBag.SelectedCoordinates.Contains(new Chess.Models.Coordinates() { X = row, Y = column }))) ? " chessboard-square-selected" : ""; 
+
+            string staticClass = "chessboard-square";
+            string colorClass = (((row + column) % 2) == 0) ? " chessboard-square-1" : " chessboard-square-0";
+            string selectedClass = ((ViewBag.SelectedCoordinates != null) && (ViewBag.SelectedCoordinates.Contains(new Chess.Models.Coordinates() { X = row, Y = column }))) ? " chessboard-square-selected" : "";
+            string classString = staticClass + colorClass + selectedClass;
             if ((row + column) % 2 == 1)
             {
-                string classString = "chessboard-square chessboard-square-0" + selectedClass;
                 <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>
                         @if (strImgPath != string.Empty)
                         {
@@ -92,7 +195,6 @@
             }
             else
             {
-                string classString = "chessboard-square chessboard-square-1" + selectedClass;
                 <button type="submit" class="@classString" name="strCoordinates" value=@strCoordinates>
                         @if (strImgPath != string.Empty)
                         {

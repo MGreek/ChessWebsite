@@ -1,6 +1,7 @@
 ﻿using Chess.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Chess.Services
 {
@@ -11,6 +12,7 @@ namespace Chess.Services
         Stalemate,
         None
     }
+
     public partial class ChessboardService
     {
         ChessboardModel Chessboard { get; }
@@ -130,6 +132,42 @@ namespace Chess.Services
                     MatchState.Stalemate : ((opposite == PlayerColor.Black) ? MatchState.BlackWin : MatchState.WhiteWin);
             }
             return MatchState.None;
+        }
+
+        public void UndoLastMove()
+        {
+            if (Chessboard.History.Count == 0)
+            { return; }
+
+            CurrentPlayer = (CurrentPlayer == PlayerColor.White) ? PlayerColor.Black : PlayerColor.White;
+
+            if (Chessboard.History.Count >= 2)
+            {
+                Move last = Chessboard.History[Chessboard.History.Count - 1];
+                Move prev = Chessboard.History[Chessboard.History.Count - 2];
+                Move[] kingCastle = new Move[] { ChessboardModel.WhiteKingShortCastle, ChessboardModel.WhiteKingLongCastle,
+                                                 ChessboardModel.BlackKingShortCastle, ChessboardModel.BlackKingLongCastle };
+                Move[] rookCastle = new Move[] { ChessboardModel.WhiteRookShortCastle, ChessboardModel.WhiteRookLongCastle,
+                                                 ChessboardModel.BlackRookShortCastle, ChessboardModel.BlackRookLongCastle };
+                Piece king = GetPiece(last.Destination);
+                if ((king == null) || (king.Type != PieceType.King))
+                {
+                    Chessboard.History.RemoveAt(Chessboard.History.Count - 1);
+                    return;
+                }
+                Piece rook = GetPiece(prev.Destination);
+                if ((rook == null) || (rook.Type != PieceType.Rook) || (rook.Color != king.Color))
+                {
+                    Chessboard.History.RemoveAt(Chessboard.History.Count - 1);
+                    return;
+                }
+                if (kingCastle.Contains(last) && rookCastle.Contains(prev))
+                {
+                    Chessboard.History.RemoveRange(Chessboard.History.Count - 2, 2);
+                    return;
+                }
+            }
+            Chessboard.History.RemoveAt(Chessboard.History.Count - 1);
         }
     } 
 }
